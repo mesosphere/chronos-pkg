@@ -1,0 +1,3 @@
+[submodule "chronos"]
+	path = chronos
+	url = git@github.com:airbnb/chronos.git
