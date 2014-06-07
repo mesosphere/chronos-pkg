@@ -1,0 +1,80 @@
+#!/bin/bash
+set -o errexit -o nounset -o pipefail
+function -h {
+cat <<USAGE
+ USAGE: chronos-framework (--jar <chronos.jar>)? <option>*
+
+  Run the chronos scheduler, collecting options from the configuration
+  directory and appending the options supplied on the command line.
+
+    $conf_dir
+
+  If you would like to pass the Jar to be run, do so with --jar. If the Jar is
+  not supplied, the script assumes the Jar has been concatenated to it and
+  will supply its own path to Java.
+
+USAGE
+}; function --help { -h ;}
+export LC_ALL=en_US.UTF-8
+
+self="$(cd "$(dirname "$0")" && pwd -P)"/"$(basename "$0")"
+chronos_jar="$self"
+conf_dir=/etc/chronos/conf
+
+function main {
+  if [[ ${1:-} = --jar ]]
+  then chronos_jar="$2" ; shift 2
+  fi
+  load_options_and_log "$@"
+}
+
+function load_options_and_log {
+  set -x
+  # Load Chronos options from Mesos and Chronos conf files that are present.
+  # Launch main program with Syslog enabled.
+  local cmd=( run_jar )
+  if [[ -s /etc/mesos/zk ]]
+  then
+    cmd+=( --zk_hosts "$(cut -d / -f 3 /etc/mesos/zk)"
+           --master "$(cat /etc/mesos/zk)" )
+  fi
+  if [[ -d $conf_dir ]]
+  then
+    while read -u 9 -r -d '' path
+    do
+      local name="${path#./}"
+      case "$name" in
+        '?'*) cmd+=( "--${name#'?'}" ) ;;
+        *)    cmd+=( "--$name" "$(cat "$conf_dir/$name")" ) ;;
+      esac
+    done 9< <(cd "$conf_dir" && find . -type f -not -name '.*' -print0)
+  fi
+  logged chronos "${cmd[@]}" "$@"
+}
+
+function run_jar {
+  local log_format='%2$s %5$s%6$s%n' # Class name, message, exception
+  ulimit -n 8192
+  export PATH=/usr/local/bin:"$PATH"
+  local vm_opts=( -Xmx512m
+                  -Djava.library.path=/usr/local/lib
+                  -Djava.util.logging.SimpleFormatter.format="$log_format" )
+  # TODO: Set main class in pom.xml and use -jar
+  exec java "${vm_opts[@]}" -cp "$chronos_jar" com.airbnb.scheduler.Main "$@"
+}
+
+function logged {
+  local token="$1[$$]" ; shift
+  exec 1> >(exec logger -p user.info   -t "$token")
+  exec 2> >(exec logger -p user.notice -t "$token")
+  "$@"
+}
+
+function msg { out "$*" >&2 ;}
+function err { local x=$? ; msg "$*" ; return $(( $x == 0 ? 1 : $x )) ;}
+function out { printf '%s\n' "$*" ;}
+
+if [[ ${1:-} ]] && declare -F | cut -d' ' -f3 | fgrep -qx -- "${1:-}"
+then "$@"
+else main "$@"
+fi

@@ -1,0 +1,40 @@
+#!/bin/bash
+set -o errexit -o nounset -o pipefail
+function -h {
+cat <<USAGE
+ USAGE: build-distribution
+
+  Create a runnable Jar for Chronos
+
+USAGE
+}; function --help { -h ;}
+export LC_ALL=en_US.UTF-8
+
+target=chronos-runnable.jar
+
+function main {
+  runnable_jar
+}
+
+function runnable_jar {
+  local script=bin/chronos-framework
+  local jars=( chronos/target/chronos-*.jar )
+  case ${#jars[@]} in
+    0) err 'No jars to concatenate.' ;;
+    1) printf 'Concatenating\n  %s\n  %s\nto form\n  %s\n' \
+              "$script" "${jars[0]}" "$target" >&2 ;;
+    *) msg 'Not able to choose among:'
+       printf ' %s\n' "${jars[@]}" >&2
+       exit 2 ;;
+  esac
+  cat bin/chronos-framework "${jars[0]}" > "$target"
+}
+
+function msg { out "$*" >&2 ;}
+function err { local x=$? ; msg "$*" ; return $(( $x == 0 ? 1 : $x )) ;}
+function out { printf '%s\n' "$*" ;}
+
+if [[ ${1:-} ]] && declare -F | cut -d' ' -f3 | fgrep -qx -- "${1:-}"
+then "$@"
+else main "$@"
+fi
