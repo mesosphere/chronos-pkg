@@ -45,7 +45,7 @@ version: plugin := org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate
 version: chronos-runnable.jar
 	( cd chronos && \
 		mvn $(plugin) -Dexpression=project.version | sed '/^\[/d' ) | \
-		tail -n1 > version
+		tail -n1 | sed 's/_/-/' > version
 
 chronos-runnable.jar:
 	cd chronos && mvn package && cd .. && bin/build-distribution
