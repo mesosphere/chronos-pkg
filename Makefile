@@ -1,29 +1,45 @@
 # Note that the prefix affects the init scripts as well.
-prefix := usr/local
+PREFIX := usr/local
+
+# Command to extract from X.X.X-rcX the version (X.X.X)
+EXTRACT_VER := perl -n -e'/^([0-9]+\.[0-9]+\.[0-9]+).*"/ && print $$1'
+
+PKG_VER := $(shell cd chronos && \
+	mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate \
+	-Dexpression=project.version | sed '/^\[/d' | tail -n1 | sed 's/_/-/' | \
+	$(EXTRACT_VER))
+
+PKG_REL := 0.1.$(shell date -u +'%Y%m%d%H%M')
+
+.PHONY: all
+all: snapshot
+
+.PHONY: release
+release: PKG_REL := 1
+release: deb rpm
+
+.PHONY: snapshot
+snapshot: deb rpm
 
 .PHONY: rpm
-rpm: version with-upstart
-	cd toor && \
+rpm: with-upstart
 	fpm -t rpm -s dir \
-		-n chronos -v `cat ../version` -p ../chronos.rpm .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
 
 .PHONY: fedora
-fedora: version with-serviced
-	cd toor && \
+fedora: with-serviced
 	fpm -t rpm -s dir \
-		-n marathon -v `cat ../version` -p ../marathon.rpm .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
 
 .PHONY: deb
-deb: version with-upstart
-	cd toor && \
+deb: with-upstart
 	fpm -t deb -s dir \
-		-n chronos -v `cat ../version` -p ../chronos.deb .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
 
 .PHONY: osx
-osx: version just-jar
-	cd toor && \
+osx: just-jar
 	fpm -t osxpkg --osxpkg-identifier-prefix io.mesosphere -s dir \
-		-n chronos -v `cat ../version` -p ../chronos.pkg .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
 
 .PHONY: with-upstart
 with-upstart: just-jar chronos.conf
@@ -31,22 +47,24 @@ with-upstart: just-jar chronos.conf
 	cp chronos.conf toor/etc/init/
 
 .PHONY: with-serviced
-with-serviced: just-jar marathon.service
+with-serviced: just-jar chronos.service
 	mkdir -p toor/usr/lib/systemd/system/
-	cp marathon.service toor/usr/lib/systemd/system/
+	cp chronos.service toor/usr/lib/systemd/system/
 
 .PHONY: just-jar
 just-jar: chronos-runnable.jar
-	mkdir -p toor/$(prefix)/bin
-	cp chronos-runnable.jar toor/$(prefix)/bin/chronos
-	chmod 755 toor/$(prefix)/bin/chronos
-
-version: plugin := org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate
-version: chronos-runnable.jar
-	( cd chronos && \
-		mvn $(plugin) -Dexpression=project.version | sed '/^\[/d' ) | \
-		tail -n1 | sed 's/_/-/' > version
+	mkdir -p toor/$(PREFIX)/bin
+	cp chronos-runnable.jar toor/$(PREFIX)/bin/chronos
+	chmod 755 toor/$(PREFIX)/bin/chronos
 
 chronos-runnable.jar:
 	cd chronos && mvn package && cd .. && bin/build-distribution
+
+clean:
+	rm -rf chronos-runnable.jar chronos*.deb chronos*.rpm chronos*.pkg toor
+
+.PHONY: prep-ubuntu
+prep-ubuntu:
+	sudo apt-get -y install default-jdk ruby-dev rpm maven node
+	sudo gem install fpm
 
