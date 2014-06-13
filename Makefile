@@ -22,24 +22,32 @@ release: deb rpm
 snapshot: deb rpm
 
 .PHONY: rpm
-rpm: with-upstart
+rpm: with-upstart default-config
 	fpm -t rpm -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
+		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
+		--vendor Mesosphere --config-files etc/ .
 
 .PHONY: fedora
-fedora: with-serviced
+fedora: with-serviced default-config
 	fpm -t rpm -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
+		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
+		--vendor Mesosphere --config-files etc/ .
 
 .PHONY: deb
-deb: with-upstart
+deb: with-upstart default-config
 	fpm -t deb -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
+		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
+		--vendor Mesosphere --config-files etc/ .
 
 .PHONY: osx
 osx: just-jar
 	fpm -t osxpkg --osxpkg-identifier-prefix io.mesosphere -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor .
+		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
+		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
+		--vendor Mesosphere .
 
 .PHONY: with-upstart
 with-upstart: just-jar chronos.conf
@@ -50,6 +58,11 @@ with-upstart: just-jar chronos.conf
 with-serviced: just-jar chronos.service
 	mkdir -p toor/usr/lib/systemd/system/
 	cp chronos.service toor/usr/lib/systemd/system/
+
+.PHONY: default-config
+default-config:
+	mkdir -p toor/etc/chronos/conf/
+	echo 4400 > toor/etc/chronos/conf/http_port
 
 .PHONY: just-jar
 just-jar: chronos-runnable.jar
