@@ -2,7 +2,7 @@
 PREFIX := usr/local
 
 # Command to extract from X.X.X-rcX the version (X.X.X)
-EXTRACT_VER := perl -n -e'/^([0-9]+\.[0-9]+\.[0-9]+).*"/ && print $$1'
+EXTRACT_VER := perl -n -e'/^([0-9]+\.[0-9]+\.[0-9]+).*/ && print $$1'
 
 PKG_VER := $(shell cd chronos && \
 	mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate \
@@ -65,6 +65,12 @@ clean:
 
 .PHONY: prep-ubuntu
 prep-ubuntu:
-	sudo apt-get -y install default-jdk ruby-dev rpm maven node
+	sudo apt-get -y install default-jdk ruby-dev rpm maven node git
 	sudo gem install fpm
+	curl -sSfL \
+		http://mirrors.gigenet.com/apache/maven/maven-3/3.2.1/binaries/apache-maven-3.2.1-bin.tar.gz \
+		--output /var/tmp/maven.tgz
+	sudo mkdir -p /usr/local/apache-maven
+	cd /usr/local/apache-maven && sudo tar xzvf /var/tmp/maven.tgz
+	sudo ln -sf /usr/local/apache-maven/*/bin/mvn /usr/local/bin/mvn
 
