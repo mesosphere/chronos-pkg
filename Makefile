@@ -11,64 +11,70 @@ PKG_VER := $(shell cd chronos && \
 
 PKG_REL := 0.1.$(shell date -u +'%Y%m%d%H%M')
 
+FPM_OPTS := -s dir -n chronos -v $(PKG_VER) --iteration $(PKG_REL) \
+	--architecture native \
+	--url "https://github.com/mesosphere/chronos" \
+	--license Apache-2.0 \
+	--description "Fault tolerant job scheduler for Mesos which handles\
+		dependencies and ISO8601 based schedules" \
+	--maintainer "Mesosphere Package Builder <support@mesosphere.io>" \
+	--vendor "Mesosphere, Inc."
+FPM_OPTS_DEB := -t deb --config-files etc/ \
+	-d 'java7-runtime-headless | java6-runtime-headless'
+FPM_OPTS_RPM := -t rpm --config-files etc/ \
+	-d coreutils -d 'java >= 1.6'
+FPM_OPTS_OSX := -t osxpkg --osxpkg-identifier-prefix io.mesosphere
+
 .PHONY: all
-all: snapshot
+all: deb rpm
 
-.PHONY: release
-release: PKG_REL := 1
-release: deb rpm
-
-.PHONY: snapshot
-snapshot: deb rpm
+.PHONY: help
+help:
+	@echo "Please choose one of the following targets: deb, rpm, fedora, osx"
+	@echo "For release builds:"
+	@echo "  make PKG_REL=1 deb"
+	@echo "To override package release version:"
+	@echo "  make PKG_REL=0.2.201412280501 rpm"
+	@exit 0
 
 .PHONY: rpm
-rpm: with-upstart default-config
-	fpm -t rpm -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
-		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
-		--vendor Mesosphere --config-files etc/ .
+rpm: toor/rpm/etc/init/chronos.conf
+rpm: toor/rpm/$(PREFIX)/bin/chronos
+rpm: toor/rpm/etc/chronos/conf/http_port
+	fpm -C toor/rpm $(FPM_OPTS_RPM) $(FPM_OPTS) .
 
 .PHONY: fedora
-fedora: with-serviced default-config
-	fpm -t rpm -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
-		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
-		--vendor Mesosphere --config-files etc/ .
+fedora: toor/fedora/usr/lib/systemd/system/chronos.service
+fedora: toor/fedora/$(PREFIX)/bin/chronos
+fedora: toor/fedora/etc/chronos/conf/http_port
+	fpm -C toor/fedora $(FPM_OPTS_RPM) $(FPM_OPTS) .
 
 .PHONY: deb
-deb: with-upstart default-config
-	fpm -t deb -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
-		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
-		--vendor Mesosphere --config-files etc/ .
+deb: toor/deb/etc/init/chronos.conf
+deb: toor/deb/$(PREFIX)/bin/chronos
+deb: toor/deb/etc/chronos/conf/http_port
+	fpm -C toor/deb $(FPM_OPTS_DEB) $(FPM_OPTS) .
 
 .PHONY: osx
-osx: just-jar
-	fpm -t osxpkg --osxpkg-identifier-prefix io.mesosphere -s dir \
-		-n chronos -v $(PKG_VER) --iteration $(PKG_REL) -C toor \
-		--url=https://github.com/mesosphere/chronos --license Apache-2.0 \
-		--vendor Mesosphere .
+osx: toor/osx/$(PREFIX)/bin/chronos
+	fpm -C toor/osx $(FPM_OPTS_OSX) $(FPM_OPTS) .
 
-.PHONY: with-upstart
-with-upstart: just-jar chronos.conf
-	mkdir -p toor/etc/init
-	cp chronos.conf toor/etc/init/
+toor/%/etc/init/chronos.conf: chronos.conf
+	mkdir -p "$(dir $@)"
+	cp chronos.conf "$@"
 
-.PHONY: with-serviced
-with-serviced: just-jar chronos.service
-	mkdir -p toor/usr/lib/systemd/system/
-	cp chronos.service toor/usr/lib/systemd/system/
+toor/%/usr/lib/systemd/system/chronos.service: chronos.service
+	mkdir -p "$(dir $@)"
+	cp chronos.service "$@"
 
-.PHONY: default-config
-default-config:
-	mkdir -p toor/etc/chronos/conf/
-	echo 4400 > toor/etc/chronos/conf/http_port
+toor/%/bin/chronos: chronos-runnable.jar
+	mkdir -p "$(dir $@)"
+	cp chronos-runnable.jar "$@"
+	chmod 755 "$@"
 
-.PHONY: just-jar
-just-jar: chronos-runnable.jar
-	mkdir -p toor/$(PREFIX)/bin
-	cp chronos-runnable.jar toor/$(PREFIX)/bin/chronos
-	chmod 755 toor/$(PREFIX)/bin/chronos
+toor/%/etc/chronos/conf/http_port:
+	mkdir -p "$(dir $@)"
+	echo 4400 > "$@"
 
 # Tests should really not be skipped... unfortunately, they appear to fail
 # regularly and non-deterministically.
@@ -76,6 +82,7 @@ chronos-runnable.jar:
 	cd chronos && mvn -DskipTests=true package
 	bin/build-distribution
 
+.PHONY: clean
 clean:
 	rm -rf chronos-runnable.jar chronos*.deb chronos*.rpm chronos*.pkg toor
 
