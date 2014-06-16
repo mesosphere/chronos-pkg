@@ -9,7 +9,7 @@ PKG_VER := $(shell cd chronos && \
 	-Dexpression=project.version | sed '/^\[/d' | tail -n1 | sed 's/_/-/' | \
 	$(EXTRACT_VER))
 
-PKG_REL := 0.1.$(shell date -u +'%Y%m%d%H%M')
+PKG_REL := 0.1.$(shell date -u +'%Y%m%d%H%M%S')
 
 FPM_OPTS := -s dir -n chronos -v $(PKG_VER) --iteration $(PKG_REL) \
 	--architecture native \
@@ -34,7 +34,7 @@ help:
 	@echo "For release builds:"
 	@echo "  make PKG_REL=1 deb"
 	@echo "To override package release version:"
-	@echo "  make PKG_REL=0.2.201412280501 rpm"
+	@echo "  make PKG_REL=0.2.20141228050159 rpm"
 	@exit 0
 
 .PHONY: rpm
