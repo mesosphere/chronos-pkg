@@ -20,7 +20,10 @@ FPM_OPTS := -s dir -n chronos -v $(PKG_VER) --iteration $(PKG_REL) \
 	--maintainer "Mesosphere Package Builder <support@mesosphere.io>" \
 	--vendor "Mesosphere, Inc."
 FPM_OPTS_DEB := -t deb --config-files etc/ \
-	-d 'java7-runtime-headless | java6-runtime-headless'
+	-d 'java7-runtime-headless | java6-runtime-headless' \
+	--deb-init chronos.init \
+	--after-install chronos.postinst \
+	--after-remove chronos.postrm
 FPM_OPTS_RPM := -t rpm --config-files etc/ \
 	-d coreutils -d 'java >= 1.6'
 FPM_OPTS_OSX := -t osxpkg --osxpkg-identifier-prefix io.mesosphere
@@ -51,7 +54,10 @@ fedora: toor/fedora/etc/chronos/conf/http_port
 
 .PHONY: deb
 deb: toor/deb/etc/init/chronos.conf
+deb: toor/deb/etc/init.d/chronos
 deb: toor/deb/$(PREFIX)/bin/chronos
+deb: chronos.postinst
+deb: chronos.postrm
 deb: toor/deb/etc/chronos/conf/http_port
 	fpm -C toor/deb $(FPM_OPTS_DEB) $(FPM_OPTS) .
 
@@ -62,6 +68,10 @@ osx: toor/osx/$(PREFIX)/bin/chronos
 toor/%/etc/init/chronos.conf: chronos.conf
 	mkdir -p "$(dir $@)"
 	cp chronos.conf "$@"
+
+toor/%/etc/init.d/chronos: chronos.init
+	mkdir -p "$(dir $@)"
+	cp chronos.init "$@"
 
 toor/%/usr/lib/systemd/system/chronos.service: chronos.service
 	mkdir -p "$(dir $@)"
