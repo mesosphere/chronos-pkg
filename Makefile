@@ -94,7 +94,7 @@ chronos-runnable.jar:
 
 .PHONY: clean
 clean:
-	rm -rf chronos-runnable.jar chronos*.deb chronos*.rpm chronos*.pkg toor
+	rm -rf chronos-runnable.jar chronos*.deb chronos*.rpm chronos*.pkg toor chronos/target
 
 .PHONY: prep-ubuntu
 prep-ubuntu:
