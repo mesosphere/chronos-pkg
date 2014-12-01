@@ -20,10 +20,9 @@ yum install rpm-build                   ## On RedHat/CentOS/Fedora
 * (Optional) Checkout the branch of Chronos you'd like to build in the
   `chronos` directory (maintained as a submodule).
 
-* Call the make target appropriate to your platform.
+* For make targets and further instructions:
 
 ```bash
-make rpm                                ## On RedHat-alikes
-make osx                                ## For Apple Macintosh
+make help
 ```
 

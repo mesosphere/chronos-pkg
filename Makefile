@@ -11,7 +11,7 @@ PKG_VER := $(shell cd chronos && \
 
 PKG_REL := 0.1.$(shell date -u +'%Y%m%d%H%M%S')
 
-FPM_OPTS := -s dir -n chronos -v $(PKG_VER) --iteration $(PKG_REL) \
+FPM_OPTS := -s dir -n chronos -v $(PKG_VER) \
 	--architecture native \
 	--url "https://github.com/mesosphere/chronos" \
 	--license Apache-2.0 \
@@ -29,11 +29,12 @@ FPM_OPTS_RPM := -t rpm --config-files etc/ \
 FPM_OPTS_OSX := -t osxpkg --osxpkg-identifier-prefix io.mesosphere
 
 .PHONY: all
-all: deb rpm
+all: deb rpm centos7
 
 .PHONY: help
 help:
-	@echo "Please choose one of the following targets: deb, rpm, fedora, osx"
+	@echo "Please choose one of the following targets:"
+	@echo "  all, deb, rpm, fedora, osx, centos7"
 	@echo "For release builds:"
 	@echo "  make PKG_REL=1 deb"
 	@echo "To override package release version:"
@@ -44,13 +45,22 @@ help:
 rpm: toor/rpm/etc/init/chronos.conf
 rpm: toor/rpm/$(PREFIX)/bin/chronos
 rpm: toor/rpm/etc/chronos/conf/http_port
-	fpm -C toor/rpm $(FPM_OPTS_RPM) $(FPM_OPTS) .
+	fpm -C toor/rpm --iteration $(PKG_REL) $(FPM_OPTS_RPM) $(FPM_OPTS) .
 
 .PHONY: fedora
 fedora: toor/fedora/usr/lib/systemd/system/chronos.service
 fedora: toor/fedora/$(PREFIX)/bin/chronos
 fedora: toor/fedora/etc/chronos/conf/http_port
-	fpm -C toor/fedora $(FPM_OPTS_RPM) $(FPM_OPTS) .
+	fpm -C toor/fedora --iteration $(PKG_REL) $(FPM_OPTS_RPM) $(FPM_OPTS) .
+
+.PHONY: centos7
+centos7: toor/centos7/usr/lib/systemd/system/chronos.service
+centos7: toor/centos7/$(PREFIX)/bin/chronos
+centos7: toor/centos7/etc/chronos/conf/http_port
+centos7: chronos.centos7.postinst
+	fpm -C toor/centos7 --iteration $(PKG_REL).$@ \
+		--after-install chronos.centos7.postinst \
+		$(FPM_OPTS_RPM) $(FPM_OPTS) .
 
 .PHONY: deb
 deb: toor/deb/etc/init/chronos.conf
@@ -59,11 +69,11 @@ deb: toor/deb/$(PREFIX)/bin/chronos
 deb: chronos.postinst
 deb: chronos.postrm
 deb: toor/deb/etc/chronos/conf/http_port
-	fpm -C toor/deb $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/deb --iteration $(PKG_REL) $(FPM_OPTS_DEB) $(FPM_OPTS) .
 
 .PHONY: osx
 osx: toor/osx/$(PREFIX)/bin/chronos
-	fpm -C toor/osx $(FPM_OPTS_OSX) $(FPM_OPTS) .
+	fpm -C toor/osx --iteration $(PKG_REL) $(FPM_OPTS_OSX) $(FPM_OPTS) .
 
 toor/%/etc/init/chronos.conf: chronos.conf
 	mkdir -p "$(dir $@)"
