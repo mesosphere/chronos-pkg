@@ -49,7 +49,7 @@ function load_options_and_log {
     while read -u 9 -r -d '' path
     do
       local name="${path#./}"
-      if ! element_in "--${name}" "$@"
+      if ! element_in "--${name#'?'}" "$@"
       then
         case "$name" in
           '?'*) cmd+=( "--${name#'?'}" ) ;;
