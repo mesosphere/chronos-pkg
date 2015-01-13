@@ -8,7 +8,6 @@ codename () {
 out () { printf '%s\n' "$*" ;}
 
 case "$1" in
-
   configure)
     if [ "$(codename)" = "wheezy" ]; then
       # Enable the SYSV links (only used on select systems).
