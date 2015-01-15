@@ -66,7 +66,7 @@ function run_jar {
   ulimit -n 8192
   export PATH=/usr/local/bin:"$PATH"
   local vm_opts=( -Xmx512m
-                  -Djava.library.path=/usr/local/lib
+                  -Djava.library.path=/usr/local/lib:/usr/lib64:/usr/lib
                   -Djava.util.logging.SimpleFormatter.format="$log_format" )
   # TODO: Set main class in pom.xml and use -jar
   exec java "${vm_opts[@]}" -cp "$chronos_jar" com.airbnb.scheduler.Main "$@"

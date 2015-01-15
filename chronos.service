@@ -4,7 +4,7 @@ After=network.target
 Wants=network.target
 
 [Service]
-ExecStart=/usr/local/bin/chronos
+ExecStart=/usr/bin/chronos
 Restart=on-abort
 Restart=always
 RestartSec=20
