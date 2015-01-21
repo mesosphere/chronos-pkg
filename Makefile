@@ -111,7 +111,7 @@ prep-ubuntu:
 	sudo apt-get -y install default-jdk ruby-dev rpm maven node git
 	sudo gem install fpm
 	curl -sSfL \
-		http://mirrors.gigenet.com/apache/maven/maven-3/3.2.1/binaries/apache-maven-3.2.1-bin.tar.gz \
+		http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz \
 		--output /var/tmp/maven.tgz
 	sudo mkdir -p /usr/local/apache-maven
 	cd /usr/local/apache-maven && sudo tar xzvf /var/tmp/maven.tgz
