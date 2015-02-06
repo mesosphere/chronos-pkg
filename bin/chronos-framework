@@ -69,7 +69,7 @@ function run_jar {
                   -Djava.library.path=/usr/local/lib:/usr/lib64:/usr/lib
                   -Djava.util.logging.SimpleFormatter.format="$log_format" )
   # TODO: Set main class in pom.xml and use -jar
-  exec java "${vm_opts[@]}" -cp "$chronos_jar" com.apache.mesos.chronos.scheduler.Main "$@"
+  exec java "${vm_opts[@]}" -cp "$chronos_jar" org.apache.mesos.chronos.scheduler.Main "$@"
 }
 
 function logged {
