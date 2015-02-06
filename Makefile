@@ -13,7 +13,7 @@ PKG_REL := 0.1.$(shell date -u +'%Y%m%d%H%M%S')
 
 FPM_OPTS := -s dir -n chronos -v $(PKG_VER) \
 	--architecture native \
-	--url "https://github.com/mesosphere/chronos" \
+	--url "https://github.com/mesos/chronos" \
 	--license Apache-2.0 \
 	--description "Fault tolerant job scheduler for Mesos which handles\
 		dependencies and ISO8601 based schedules" \
