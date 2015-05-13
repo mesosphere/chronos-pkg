@@ -4,6 +4,7 @@ After=network.target
 Wants=network.target
 
 [Service]
+EnvironmentFile=-/etc/sysconfig/chronos
 ExecStart=/usr/bin/chronos
 Restart=always
 RestartSec=20
