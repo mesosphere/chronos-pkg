@@ -20,10 +20,11 @@ FPM_OPTS := -s dir -n chronos -v $(PKG_VER) \
 	--maintainer "Mesosphere Package Builder <support@mesosphere.io>" \
 	--vendor "Mesosphere, Inc."
 FPM_OPTS_DEB := -t deb --config-files etc/ \
-	-d 'java7-runtime-headless | java6-runtime-headless' \
-	--deb-init chronos.init \
+	-d 'java8-runtime-headless | java7-runtime-headless | java6-runtime-headless' \
+	-d 'lsb-release' \
 	--after-install chronos.postinst \
 	--after-remove chronos.postrm
+FPM_OPTS_DEB_INIT := --deb-init chronos.init
 FPM_OPTS_RPM := -t rpm --config-files etc/ \
 	-d coreutils -d 'java >= 1.6'
 FPM_OPTS_OSX := -t osxpkg --osxpkg-identifier-prefix io.mesosphere
@@ -45,19 +46,22 @@ all: deb rpm
 deb: ubuntu debian
 
 .PHONY: rpm
-rpm: el fedora
+rpm: el
 
 .PHONY: el
 el: el6 el7
 
 .PHONY: fedora
-fedora: fedora20 fedora21
+fedora: fedora20 fedora21 fedora22
 
 .PHONY: ubuntu
-ubuntu: ubuntu-precise ubuntu-quantal ubuntu-raring ubuntu-saucy ubuntu-trusty ubuntu-utopic
+ubuntu: ubuntu-precise ubuntu-trusty ubuntu-vivid
 
 .PHONY: debian
-debian: debian-wheezy-77
+debian: debian-jessie
+
+.PHONY: debian-jessie
+debian-jessie: debian-jessie-81
 
 .PHONY: fedora20
 fedora20: toor/fedora20/usr/lib/systemd/system/chronos.service
@@ -71,6 +75,12 @@ fedora21: toor/fedora21/$(PREFIX)/bin/chronos
 fedora21: toor/fedora21/etc/chronos/conf/http_port
 	fpm -C toor/fedora21 --iteration $(PKG_REL).fc21 $(FPM_OPTS_RPM) $(FPM_OPTS) .
 
+.PHONY: fedora22
+fedora22: toor/fedora22/usr/lib/systemd/system/chronos.service
+fedora22: toor/fedora22/$(PREFIX)/bin/chronos
+fedora22: toor/fedora22/etc/chronos/conf/http_port
+	fpm -C toor/fedora22 --iteration $(PKG_REL).fc22 $(FPM_OPTS_RPM) $(FPM_OPTS) .
+
 .PHONY: el6
 el6: toor/el6/etc/init/chronos.conf
 el6: toor/el6/$(PREFIX)/bin/chronos
@@ -81,9 +91,9 @@ el6: toor/el6/etc/chronos/conf/http_port
 el7: toor/el7/usr/lib/systemd/system/chronos.service
 el7: toor/el7/$(PREFIX)/bin/chronos
 el7: toor/el7/etc/chronos/conf/http_port
-el7: chronos.el7.postinst
+el7: chronos.systemd.postinst
 	fpm -C toor/el7 --iteration $(PKG_REL).el7 \
-		--after-install chronos.el7.postinst \
+		--after-install chronos.systemd.postinst \
 		$(FPM_OPTS_RPM) $(FPM_OPTS) .
 
 .PHONY: ubuntu-precise
@@ -93,7 +103,7 @@ ubuntu-precise: toor/ubuntu-precise/$(PREFIX)/bin/chronos
 ubuntu-precise: chronos.postinst
 ubuntu-precise: chronos.postrm
 ubuntu-precise: toor/ubuntu-precise/etc/chronos/conf/http_port
-	fpm -C toor/ubuntu-precise --iteration $(PKG_REL).ubuntu1204 $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/ubuntu-precise --iteration $(PKG_REL).ubuntu1204 $(FPM_OPTS_DEB) $(FPM_OPTS_DEB_INIT) $(FPM_OPTS) .
 
 .PHONY: ubuntu-quantal
 ubuntu-quantal: toor/ubuntu-quantal/etc/init/chronos.conf
@@ -102,7 +112,7 @@ ubuntu-quantal: toor/ubuntu-quantal/$(PREFIX)/bin/chronos
 ubuntu-quantal: chronos.postinst
 ubuntu-quantal: chronos.postrm
 ubuntu-quantal: toor/ubuntu-quantal/etc/chronos/conf/http_port
-	fpm -C toor/ubuntu-quantal --iteration $(PKG_REL).ubuntu1210 $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/ubuntu-quantal --iteration $(PKG_REL).ubuntu1210 $(FPM_OPTS_DEB) $(FPM_OPTS_DEB_INIT) $(FPM_OPTS) .
 
 .PHONY: ubuntu-raring
 ubuntu-raring: toor/ubuntu-raring/etc/init/chronos.conf
@@ -111,7 +121,7 @@ ubuntu-raring: toor/ubuntu-raring/$(PREFIX)/bin/chronos
 ubuntu-raring: chronos.postinst
 ubuntu-raring: chronos.postrm
 ubuntu-raring: toor/ubuntu-raring/etc/chronos/conf/http_port
-	fpm -C toor/ubuntu-raring --iteration $(PKG_REL).ubuntu1304 $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/ubuntu-raring --iteration $(PKG_REL).ubuntu1304 $(FPM_OPTS_DEB) $(FPM_OPTS_DEB_INIT) $(FPM_OPTS) .
 
 .PHONY: ubuntu-saucy
 ubuntu-saucy: toor/ubuntu-saucy/etc/init/chronos.conf
@@ -120,7 +130,7 @@ ubuntu-saucy: toor/ubuntu-saucy/$(PREFIX)/bin/chronos
 ubuntu-saucy: chronos.postinst
 ubuntu-saucy: chronos.postrm
 ubuntu-saucy: toor/ubuntu-saucy/etc/chronos/conf/http_port
-	fpm -C toor/ubuntu-saucy --iteration $(PKG_REL).ubuntu1310 $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/ubuntu-saucy --iteration $(PKG_REL).ubuntu1310 $(FPM_OPTS_DEB) $(FPM_OPTS_DEB_INIT) $(FPM_OPTS) .
 
 .PHONY: ubuntu-trusty
 ubuntu-trusty: toor/ubuntu-trusty/etc/init/chronos.conf
@@ -129,7 +139,7 @@ ubuntu-trusty: toor/ubuntu-trusty/$(PREFIX)/bin/chronos
 ubuntu-trusty: chronos.postinst
 ubuntu-trusty: chronos.postrm
 ubuntu-trusty: toor/ubuntu-trusty/etc/chronos/conf/http_port
-	fpm -C toor/ubuntu-trusty --iteration $(PKG_REL).ubuntu1404 $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/ubuntu-trusty --iteration $(PKG_REL).ubuntu1404 $(FPM_OPTS_DEB) $(FPM_OPTS_DEB_INIT) $(FPM_OPTS) .
 
 .PHONY: ubuntu-utopic
 ubuntu-utopic: toor/ubuntu-utopic/etc/init/chronos.conf
@@ -138,7 +148,16 @@ ubuntu-utopic: toor/ubuntu-utopic/$(PREFIX)/bin/chronos
 ubuntu-utopic: chronos.postinst
 ubuntu-utopic: chronos.postrm
 ubuntu-utopic: toor/ubuntu-utopic/etc/chronos/conf/http_port
-	fpm -C toor/ubuntu-utopic --iteration $(PKG_REL).ubuntu1410 $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/ubuntu-utopic --iteration $(PKG_REL).ubuntu1410 $(FPM_OPTS_DEB) $(FPM_OPTS_DEB_INIT) $(FPM_OPTS) .
+
+.PHONY: ubuntu-vivid
+ubuntu-vivid: toor/ubuntu-vivid/lib/systemd/system/chronos.service
+ubuntu-vivid: toor/ubuntu-vivid/$(PREFIX)/bin/chronos
+ubuntu-vivid: toor/ubuntu-vivid/etc/chronos/conf/http_port
+ubuntu-vivid: chronos.systemd.postinst
+	fpm -C toor/ubuntu-vivid --iteration $(PKG_REL).ubuntu1504 \
+		--after-install chronos.systemd.postinst \
+		$(FPM_OPTS_DEB) $(FPM_OPTS) .
 
 .PHONY: debian-wheezy-77
 debian-wheezy-77: toor/debian-wheezy-77/etc/init/chronos.conf
@@ -147,7 +166,16 @@ debian-wheezy-77: toor/debian-wheezy-77/$(PREFIX)/bin/chronos
 debian-wheezy-77: chronos.postinst
 debian-wheezy-77: chronos.postrm
 debian-wheezy-77: toor/debian-wheezy-77/etc/chronos/conf/http_port
-	fpm -C toor/debian-wheezy-77 --iteration $(PKG_REL).debian77 $(FPM_OPTS_DEB) $(FPM_OPTS) .
+	fpm -C toor/debian-wheezy-77 --iteration $(PKG_REL).debian77 $(FPM_OPTS_DEB) $(FPM_OPTS_DEB_INIT) $(FPM_OPTS) .
+
+.PHONY: debian-jessie-81
+debian-jessie-81: toor/debian-jessie-81/lib/systemd/system/chronos.service
+debian-jessie-81: toor/debian-jessie-81/$(PREFIX)/bin/chronos
+debian-jessie-81: toor/debian-jessie-81/etc/chronos/conf/http_port
+debian-jessie-81: chronos.systemd.postinst
+	fpm -C toor/debian-jessie-81 --iteration $(PKG_REL).debian81 \
+		--after-install chronos.systemd.postinst \
+		$(FPM_OPTS_DEB) $(FPM_OPTS) .
 
 .PHONY: osx
 osx: toor/osx/$(PREFIX)/bin/chronos
@@ -162,6 +190,10 @@ toor/%/etc/init.d/chronos: chronos.init
 	cp chronos.init "$@"
 
 toor/%/usr/lib/systemd/system/chronos.service: chronos.service
+	mkdir -p "$(dir $@)"
+	cp chronos.service "$@"
+
+toor/%/lib/systemd/system/chronos.service: chronos.service
 	mkdir -p "$(dir $@)"
 	cp chronos.service "$@"
 
