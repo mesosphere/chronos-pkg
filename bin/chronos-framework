@@ -5,9 +5,8 @@ cat <<USAGE
  USAGE: chronos-framework (--jar <chronos.jar>)? <option>*
 
   Run the chronos scheduler, collecting options from the configuration
-  directory and appending the options supplied on the command line.
-
-    $conf_dir
+  directory $conf_dir and configuration file $conf_file,
+  and appending the options supplied on the command line.
 
   If you would like to pass the Jar to be run, do so with --jar. If the Jar is
   not supplied, the script assumes the Jar has been concatenated to it and
@@ -20,6 +19,7 @@ export LC_ALL=en_US.UTF-8
 self="$(cd "$(dirname "$0")" && pwd -P)"/"$(basename "$0")"
 chronos_jar="$self"
 conf_dir=/etc/chronos/conf
+conf_file=/etc/default/chronos
 
 function main {
   if [[ ${1:-} = --jar ]]
@@ -39,11 +39,7 @@ function load_options_and_log {
   # Load Chronos options from Mesos and Chronos conf files that are present.
   # Launch main program with Syslog enabled.
   local cmd=( run_jar )
-  if [[ -s /etc/mesos/zk ]]
-  then
-    cmd+=( --zk_hosts "$(cut -d / -f 3 /etc/mesos/zk)"
-           --master "$(cat /etc/mesos/zk)" )
-  fi
+  # Load custom options
   if [[ -d $conf_dir ]]
   then
     while read -u 9 -r -d '' path
@@ -57,6 +53,19 @@ function load_options_and_log {
         esac
       fi
     done 9< <(cd "$conf_dir" && find . -type f -not -name '.*' -print0)
+  fi
+  # Read environment variables from config file
+  set -o allexport
+  [[ ! -f "$conf_file" ]] || . "$conf_file"
+  set +o allexport
+  for env_op in `env | grep ^CHRONOS_ | sed -e 's/CHRONOS_//' -e 's/=/ /'| awk '{printf("%s%s ", "--", tolower($1)); for(i=2;i<=NF;i++){printf("%s ", $i)}}'| sed -e 's/ $//'`; do
+    cmd+=( "$env_op" )
+  done
+  # Default zk an master options
+  if [[ -s /etc/mesos/zk ]]
+  then
+    cmd+=( --zk_hosts "$(cut -d / -f 3 /etc/mesos/zk)"
+           --master "$(cat /etc/mesos/zk)" )
   fi
   logged chronos "${cmd[@]}" "$@"
 }
