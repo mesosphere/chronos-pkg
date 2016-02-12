@@ -83,7 +83,13 @@ function run_jar {
     vm_opts+=( ${j_opt} )
   done
   # TODO: Set main class in pom.xml and use -jar
-  exec java "${vm_opts[@]}" -cp "$chronos_jar" org.apache.mesos.chronos.scheduler.Main "$@"
+  if [ -n "${JAVA_HOME:=}" ]
+    then
+      JAVA_BIN="$JAVA_HOME/bin/java"
+    else
+      JAVA_BIN="java"
+  fi
+  exec $JAVA_BIN "${vm_opts[@]}" -cp "$chronos_jar" org.apache.mesos.chronos.scheduler.Main "$@"
 }
 
 function logged {
