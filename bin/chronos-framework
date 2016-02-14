@@ -61,11 +61,17 @@ function load_options_and_log {
   for env_op in `env | grep ^CHRONOS_ | sed -e 's/CHRONOS_//' -e 's/=/ /'| awk '{printf("%s%s ", "--", tolower($1)); for(i=2;i<=NF;i++){printf("%s ", $i)}}'| sed -e 's/ $//'`; do
     cmd+=( "$env_op" )
   done
-  # Default zk an master options
+  # Default zk and master options, if not already specified
   if [[ -s /etc/mesos/zk ]]
   then
-    cmd+=( --zk_hosts "$(cut -d / -f 3 /etc/mesos/zk)"
-           --master "$(cat /etc/mesos/zk)" )
+    if ! element_in "--zk_hosts" "${cmd[@]}"
+    then
+      cmd+=( --zk_hosts "$(cut -d / -f 3 /etc/mesos/zk)" )
+    fi
+    if ! element_in "--master" "${cmd[@]}"
+    then
+      cmd+=( --master "$(cat /etc/mesos/zk)" )
+    fi
   fi
   logged chronos "${cmd[@]}" "$@"
 }
