@@ -64,8 +64,14 @@ function load_options_and_log {
   # Default zk an master options
   if [[ -s /etc/mesos/zk ]]
   then
-    cmd+=( --zk_hosts "$(cut -d / -f 3 /etc/mesos/zk)"
-           --master "$(cat /etc/mesos/zk)" )
+    if [[ "${cmd[@]} $@" != *'--zk_hosts '* ]]
+    then
+      cmd+=( --zk_hosts "$(cut -d / -f 3 /etc/mesos/zk)" )
+    fi
+    if [[ "${cmd[@]} $@" != *'--master'* ]]
+    then
+      cmd+=( --master "$(cat /etc/mesos/zk)" )
+    fi
   fi
   logged chronos "${cmd[@]}" "$@"
 }
