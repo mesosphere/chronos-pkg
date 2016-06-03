@@ -159,6 +159,24 @@ ubuntu-vivid: chronos.systemd.postinst
 		--after-install chronos.systemd.postinst \
 		$(FPM_OPTS_DEB) $(FPM_OPTS) .
 
+.PHONY: ubuntu-wily
+ubuntu-wily: toor/ubuntu-wily/lib/systemd/system/chronos.service
+ubuntu-wily: toor/ubuntu-wily/$(PREFIX)/bin/chronos
+ubuntu-wily: toor/ubuntu-wily/etc/chronos/conf/http_port
+ubuntu-wily: chronos.systemd.postinst
+	fpm -C toor/ubuntu-wily --iteration $(PKG_REL).ubuntu1510 \
+		--after-install chronos.systemd.postinst \
+		$(FPM_OPTS_DEB) $(FPM_OPTS) .
+
+.PHONY: ubuntu-xenial
+ubuntu-xenial: toor/ubuntu-xenial/lib/systemd/system/chronos.service
+ubuntu-xenial: toor/ubuntu-xenial/$(PREFIX)/bin/chronos
+ubuntu-xenial: toor/ubuntu-xenial/etc/chronos/conf/http_port
+ubuntu-xenial: chronos.systemd.postinst
+	fpm -C toor/ubuntu-xenial --iteration $(PKG_REL).ubuntu1604 \
+		--after-install chronos.systemd.postinst \
+		$(FPM_OPTS_DEB) $(FPM_OPTS) .
+
 .PHONY: debian-wheezy-77
 debian-wheezy-77: toor/debian-wheezy-77/etc/init/chronos.conf
 debian-wheezy-77: toor/debian-wheezy-77/etc/init.d/chronos
