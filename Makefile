@@ -55,7 +55,7 @@ el: el6 el7
 fedora: fedora20 fedora21 fedora22
 
 .PHONY: ubuntu
-ubuntu: ubuntu-precise ubuntu-trusty ubuntu-vivid
+ubuntu: ubuntu-precise ubuntu-trusty ubuntu-xenial
 
 .PHONY: debian
 debian: debian-jessie
@@ -156,15 +156,6 @@ ubuntu-vivid: toor/ubuntu-vivid/$(PREFIX)/bin/chronos
 ubuntu-vivid: toor/ubuntu-vivid/etc/chronos/conf/http_port
 ubuntu-vivid: chronos.systemd.postinst
 	fpm -C toor/ubuntu-vivid --iteration $(PKG_REL).ubuntu1504 \
-		--after-install chronos.systemd.postinst \
-		$(FPM_OPTS_DEB) $(FPM_OPTS) .
-
-.PHONY: ubuntu-wily
-ubuntu-wily: toor/ubuntu-wily/lib/systemd/system/chronos.service
-ubuntu-wily: toor/ubuntu-wily/$(PREFIX)/bin/chronos
-ubuntu-wily: toor/ubuntu-wily/etc/chronos/conf/http_port
-ubuntu-wily: chronos.systemd.postinst
-	fpm -C toor/ubuntu-wily --iteration $(PKG_REL).ubuntu1510 \
 		--after-install chronos.systemd.postinst \
 		$(FPM_OPTS_DEB) $(FPM_OPTS) .
 
