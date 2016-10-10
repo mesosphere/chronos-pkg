@@ -89,7 +89,7 @@ function load_options_and_log {
 }
 
 function run_jar {
-  local log_format='%2$s %5$s%6$s%n' # Class name, message, exception
+  local log_format='%2$s%5$s%6$s%n' # Class name, message, exception
 
   # if running as root and open file limit less than 8192 raise the limit
   [ $EUID -eq 0 -a $(ulimit -n) -lt 8192 ] && ulimit -n 8192
