@@ -1,6 +1,8 @@
 *.jar
 *.deb
 *.rpm
+.DS_Store
 
 toor
 version
+__pycache__

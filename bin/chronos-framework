@@ -73,7 +73,19 @@ function load_options_and_log {
       cmd+=( --master "$(cat /etc/mesos/zk)" )
     fi
   fi
-  logged chronos "${cmd[@]}" "$@"
+
+  if [[ "${cmd[@]} $@" =~ .*--no[_-]logger.* ]]
+  then
+    local clean_cmd=()
+    for i in "${cmd[@]}" "$@"; do
+      if [[ "${i}" != "--no-logger" ]] && [[ "${i}" != "--no_logger" ]]; then
+        clean_cmd+=( "${i}" )
+      fi
+    done
+    "${clean_cmd[@]}"
+  else
+    logged chronos "${cmd[@]}" "$@"
+  fi
 }
 
 function run_jar {
