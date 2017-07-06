@@ -26,3 +26,16 @@ yum install rpm-build                   ## On RedHat/CentOS/Fedora
 make help
 ```
 
+# Testing
+
+Shakedown testing under [tests/system](tests/system) was added to test Chronos in an DCOS env.
+
+It has been used to test Chrono 3.0.1 and runs through the basic chronos tutorial.
+
+To run:
+
+1. Install [Shakedown](https://github.com/dcos/shakedown)
+1. Create a DCOS and setup from CLI
+1. Run shakedown test `shakedown tests/`
+
+*note:*  To run a specific test:  `shakedown tests/`
